@@ -22,10 +22,11 @@ import { WeddingInvite } from '@/lib/types';
 import { getThemeById } from '@/config/themes';
 
 export default function AdminPage() {
-  const [pin, setPin] = useState('admin123');
+  const [pin, setPin] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const [invites, setInvites] = useState<WeddingInvite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,14 +55,31 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, fetchInvites]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === 'admin123' || pinInput === pin) {
-      setIsAuthenticated(true);
-      setPin(pinInput);
-      setPinError(false);
-    } else {
+    if (!pinInput.trim()) return;
+    setIsVerifying(true);
+    setPinError(false);
+
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setIsAuthenticated(true);
+        setPin(pinInput);
+        setPinError(false);
+      } else {
+        setPinError(true);
+      }
+    } catch {
       setPinError(true);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -155,25 +173,30 @@ export default function AdminPage() {
             Owner Admin Portal
           </h1>
           <p className="text-xs text-zinc-400 mb-6">
-            Enter your admin PIN to review and confirm pending wedding invitation requests.
+            Enter your admin credentials to access the management portal.
           </p>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="password"
-              placeholder="Enter PIN (default: admin123)"
+              placeholder="Enter Admin Password"
               value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
+              onChange={(e) => {
+                setPinInput(e.target.value);
+                if (pinError) setPinError(false);
+              }}
+              autoComplete="current-password"
               className="w-full px-4 py-3 rounded-xl bg-black border border-white/20 text-center text-sm tracking-widest focus:border-amber-400 focus:outline-none"
             />
             {pinError && (
-              <p className="text-xs text-red-400">Invalid PIN. Try admin123</p>
+              <p className="text-xs text-red-400">Invalid credentials. Access denied.</p>
             )}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-serif font-bold text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-95"
+              disabled={isVerifying}
+              className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-serif font-bold text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-95 disabled:opacity-50"
             >
-              Unlock Dashboard
+              {isVerifying ? 'Verifying...' : 'Unlock Dashboard'}
             </button>
           </form>
         </div>

@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import { updateInviteStatus } from '@/lib/storage';
-
-const OWNER_PIN = 'admin123';
+import { verifyAdminPassword } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { slug, pin } = body;
 
-    if (pin !== OWNER_PIN) {
-      return NextResponse.json({ success: false, error: 'Unauthorized: Invalid Admin PIN' }, { status: 401 });
+    if (!verifyAdminPassword(pin)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Invalid Admin Credentials' }, { status: 401 });
     }
 
     const updated = await updateInviteStatus(slug, 'rejected');
