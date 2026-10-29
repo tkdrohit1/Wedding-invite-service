@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100" viewBox="0 0 800 1100">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2b060d"/>
+      <stop offset="50%" stop-color="#420912"/>
+      <stop offset="100%" stop-color="#180306"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fae8b8"/>
+      <stop offset="50%" stop-color="#e8c98a"/>
+      <stop offset="100%" stop-color="#b88a3b"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="1100" rx="40" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Gold Border -->
+  <rect x="25" y="25" width="750" height="1050" rx="30" fill="none" stroke="url(#goldGrad)" stroke-width="2" opacity="0.6"/>
+  <!-- Inner Gold Border -->
+  <rect x="35" y="35" width="730" height="1030" rx="24" fill="none" stroke="url(#goldGrad)" stroke-width="1" stroke-dasharray="6 4" opacity="0.4"/>
+
+  <!-- Top Monogram Seal -->
+  <circle cx="400" cy="120" r="42" fill="#5c121e" stroke="url(#goldGrad)" stroke-width="2" filter="url(#glow)"/>
+  <text x="400" y="128" font-family="'Cinzel', serif, 'Times New Roman'" font-size="24" font-weight="bold" fill="url(#goldGrad)" text-anchor="middle">D &amp; P</text>
+
+  <!-- Header -->
+  <text x="400" y="205" font-family="'Cinzel', serif, 'Times New Roman'" font-size="14" letter-spacing="6" fill="#fae8b8" text-anchor="middle" opacity="0.9">THE WEDDING INVITATION</text>
+  <text x="400" y="255" font-family="'Brush Script MT', 'Great Vibes', cursive, serif" font-size="52" fill="#ffffff" text-anchor="middle">Deepak &amp; Pooja</text>
+  
+  <text x="400" y="295" font-family="serif" font-size="14" letter-spacing="3" fill="#e8c98a" text-anchor="middle">24 · NOVEMBER · 2026</text>
+  <text x="400" y="320" font-family="sans-serif" font-size="12" letter-spacing="4" fill="#ffffff" text-anchor="middle" opacity="0.6">ROYAL GARDEN · KAUSHAMBI</text>
+
+  <!-- Decorative Divider Line -->
+  <line x1="250" y1="355" x2="550" y2="355" stroke="url(#goldGrad)" stroke-width="1" opacity="0.5"/>
+  <polygon points="400,351 405,355 400,359 395,355" fill="#e8c98a"/>
+
+  <!-- QR Code Container Card -->
+  <rect x="175" y="390" width="450" height="450" rx="28" fill="#ffffff" stroke="url(#goldGrad)" stroke-width="4" filter="url(#glow)"/>
+  
+  <!-- Embedded High-Res QR Code -->
+  <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAAD6AQMAAACyIsh+AAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABoklEQVRoge2YvZGEMAyF5dmAkBIoxaXZpVEKJRASMNY9PRvOM3uX78ooWIz3S5Cf/izy2GMfZ7OanTLtIjGLvFT3pe15Ajb8hHOq28V29mXF4+UMiKoBflDFNgg4ZFmTFpeA+WGNKgGn7RjgYrX/TdVDAlX2Bxem+3/i4suBmrAMiGsK5XXMf2a5Lwc6i3bKb7s+APqBYjZ5l6bvnMI5FgBLAhVYaRboQWr1yrfsfQAI6iTsQBYUraaHCODWgw9AIXaBH1iakbuOWTfzyOkKsDosrRBFUzXPXdJvmA8D8DEpk7k26+LCBTCzz0TN4lu59XD7wRHAqcEaLcp+t+ju48IDgI++OhDNtuJU2PlhEAAaZ82CCmIOdYyC7EvfcDoA8Pkm+2vi16p/6RzlBiitZtlwxJYrSyd7J0CmH1iarSTVXN3d5AwBNGvRXcco5HJ1BnTTInJ4EfbV/TzlBNhEmsbpBwPghyzegMgbrTr72yHPb7IfDDCPWZbj3OgWsCxG2Vfrs70HQK5b95Wzf4v34Ay4kxiH4lBPu+9AxgAee+yj7AdSCNPoulEhLQAAAABJRU5ErkJggg==" x="205" y="420" width="390" height="390" />
+
+  <!-- Scan Instructions -->
+  <text x="400" y="900" font-family="'Cinzel', serif, sans-serif" font-size="16" font-weight="bold" letter-spacing="4" fill="#fae8b8" text-anchor="middle">SCAN TO UNVEIL INVITATION</text>
+  <text x="400" y="935" font-family="sans-serif" font-size="13" fill="#ffffff" text-anchor="middle" opacity="0.8">Point your phone camera to open the digital wedding invite</text>
+  
+  <text x="400" y="985" font-family="monospace" font-size="13" letter-spacing="1" fill="#e8c98a" text-anchor="middle">https://invitation-lake-three.vercel.app</text>
+
+  <!-- Bottom Hearts Tag -->
+  <text x="400" y="1035" font-family="serif" font-size="11" letter-spacing="2" fill="#fae8b8" text-anchor="middle" opacity="0.6">✦ BLESS OUR FOREVER ✦</text>
+</svg>
