@@ -216,9 +216,12 @@ export default function AdminPage() {
       <header className="sticky top-0 z-30 bg-black/60 border-b border-white/10 backdrop-blur-xl px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-400 text-black flex items-center justify-center font-bold text-sm shadow">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="EternalVows Logo"
+              className="w-10 h-10 rounded-full border border-amber-400/40 shadow object-cover"
+            />
             <div>
               <h1 className="font-serif font-bold text-base text-amber-200">
                 EternalVows Owner Panel

@@ -220,15 +220,18 @@ export default function HomePage() {
       <nav className="sticky top-0 z-40 backdrop-blur-xl bg-black/60 border-b border-white/10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-serif font-black shadow-lg shadow-amber-500/20 text-lg">
-              EV
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="EternalVows Logo"
+              className="w-11 h-11 rounded-full border border-amber-400/40 shadow-lg shadow-amber-500/20 object-cover"
+            />
             <div>
               <span className="font-serif font-bold text-lg tracking-wider text-amber-200">
                 EternalVows
               </span>
               <p className="text-[10px] text-zinc-400 uppercase tracking-widest leading-none">
-                Automated Luxury Wedding Engine
+                Luxury Wedding Invitation Studio
               </p>
             </div>
           </div>

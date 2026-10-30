@@ -8,9 +8,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'EternalVows - Automated Luxury Wedding Invites & Video Generator',
+  title: 'EternalVows - Luxury Wedding Invitation Studio & Video Engine',
   description:
-    'Generate bespoke digital wedding invitations, animated WhatsApp video reveals, and QR passes across 70 authentic cultural design patterns.',
+    'Bespoke interactive digital wedding invitations, animated WhatsApp video reveals, and guest passes across 70 authentic cultural traditions.',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({
