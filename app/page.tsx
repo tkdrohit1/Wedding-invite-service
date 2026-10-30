@@ -15,13 +15,15 @@ import {
   CheckCircle2,
   ExternalLink,
   ShieldCheck,
+  MessageCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { WEDDING_THEMES } from '@/config/themes';
 import { ThemeDefinition, ReligionCulture } from '@/lib/types';
 import { WishlyTemplateCard } from '@/components/home/WishlyTemplateCard';
 import { HeroShowcase } from '@/components/home/HeroShowcase';
 import { WishlyDemoStageModal } from '@/components/home/WishlyDemoStageModal';
-import { Eye } from 'lucide-react';
 
 export default function HomePage() {
   // Filter States (Wishly-style Tradition & Collection Pills)
@@ -92,6 +94,7 @@ export default function HomePage() {
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSlug, setSubmittedSlug] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Filter Themes (Wishly Tradition & Collection Categories)
   const filteredThemes = useMemo(() => {
@@ -366,25 +369,92 @@ export default function HomePage() {
                 </p>
 
                 {/* Draft Preview Link Box */}
-                <div className="bg-black/60 border border-white/10 rounded-2xl p-6 text-left max-w-lg mx-auto mb-8 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase tracking-wider text-amber-300 font-bold flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Draft Preview Link (2 Screens Active)</span>
-                    </span>
-                    <span className="text-[10px] text-zinc-500 uppercase">Under Review</span>
-                  </div>
-                  <input
-                    type="text"
-                    readOnly
-                    value={`http://localhost:3000/invite/${submittedSlug}`}
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-white/10 text-xs text-amber-200 font-mono"
-                  />
-                  <p className="text-[11px] text-zinc-400">
-                    You can view the entrance reveal and header screens immediately. Full itinerary,
-                    venue map, and video download will be activated after admin confirmation.
-                  </p>
-                </div>
+                {(() => {
+                  const liveUrl =
+                    typeof window !== 'undefined'
+                      ? `${window.location.origin}/invite/${submittedSlug}`
+                      : `/invite/${submittedSlug}`;
+                  const ownerPhone = process.env.NEXT_PUBLIC_OWNER_PHONE || '919876543210';
+                  const ownerEmail = process.env.NEXT_PUBLIC_OWNER_EMAIL || 'studio@eternalvows.com';
+                  const waText = `Hi EternalVows Studio! 💌\n\nI have submitted a wedding invitation order on your site:\n\n💍 Couple: ${groomName} & ${brideName}\n🎨 Theme: ${chosenTheme.name}\n📅 Date: ${new Date(weddingDate).toLocaleDateString()}\n📍 Venue: ${venueName}\n📞 Phone: ${customerPhone}\n✉️ Email: ${customerEmail}\n🔗 Draft Preview: ${liveUrl}\n\nPlease confirm our booking and unlock the full invitation and video!`;
+                  const waUrl = `https://wa.me/${ownerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(waText)}`;
+                  const mailtoUrl = `mailto:${ownerEmail}?subject=${encodeURIComponent(`Wedding Invite Order - ${groomName} & ${brideName}`)}&body=${encodeURIComponent(waText)}`;
+
+                  return (
+                    <>
+                      <div className="bg-black/60 border border-white/10 rounded-2xl p-6 text-left max-w-lg mx-auto mb-6 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs uppercase tracking-wider text-amber-300 font-bold flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Draft Preview Link (2 Screens Active)</span>
+                          </span>
+                          <span className="text-[10px] text-zinc-500 uppercase">Under Review</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={liveUrl}
+                            className="flex-1 px-3 py-2 rounded-lg bg-zinc-800 border border-white/10 text-xs text-amber-200 font-mono select-all focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(liveUrl);
+                              setCopiedLink(true);
+                              setTimeout(() => setCopiedLink(false), 2000);
+                            }}
+                            className="px-3 py-2 rounded-lg bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 text-xs font-semibold flex items-center gap-1 shrink-0 transition"
+                          >
+                            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-zinc-400">
+                          You can view the entrance reveal and header screens immediately. Full itinerary,
+                          venue map, and video download will be activated after admin confirmation.
+                        </p>
+                      </div>
+
+                      {/* Immediate Lead Transmission / WhatsApp Notification */}
+                      <div className="max-w-lg mx-auto mb-8 p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-700/5 border border-emerald-500/30 text-left space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#25D366] text-black flex items-center justify-center shrink-0 shadow">
+                            <MessageCircle className="w-4 h-4 fill-black text-black" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                              Fast-Track Confirmation on WhatsApp
+                            </h4>
+                            <p className="text-[11px] text-zinc-400">
+                              Send your order details directly to our studio team on WhatsApp for instant confirmation.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#25D366] hover:bg-[#20bd5a] text-black shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-transform active:scale-95"
+                          >
+                            <MessageCircle className="w-4 h-4 fill-black" />
+                            <span>Send Order on WhatsApp</span>
+                          </a>
+
+                          <a
+                            href={mailtoUrl}
+                            className="px-4 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/15 flex items-center gap-1.5 transition"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            <span>Email Studio</span>
+                          </a>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
 
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <Link

@@ -1,28 +1,204 @@
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
+import os from 'os';
 import { WeddingInvite, RsvpSubmission, BlessingItem, InviteStatus } from './types';
 import { WEDDING_THEMES } from '@/config/themes';
 
-const DB_PATH = path.join(process.cwd(), 'data', 'invites.json');
+const BUNDLED_DB_PATH = path.join(process.cwd(), 'data', 'invites.json');
+const TMP_DB_PATH = path.join(os.tmpdir(), 'eternalvows_invites.json');
 
-async function readInvites(): Promise<WeddingInvite[]> {
+// Upstash / Vercel KV Configuration
+const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+const KV_KEY = 'eternalvows_invites_v1';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __eternalvows_cache: WeddingInvite[] | undefined;
+}
+
+export function getStorageEngine(): 'kv' | 'tmp' | 'local' {
+  if (KV_URL && KV_TOKEN) return 'kv';
+  if (process.env.VERCEL) return 'tmp';
+  return 'local';
+}
+
+// Low-level KV helpers using REST API
+async function kvGet(key: string): Promise<WeddingInvite[] | null> {
+  if (!KV_URL || !KV_TOKEN) return null;
   try {
-    const data = await fs.readFile(DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
-      await fs.writeFile(DB_PATH, '[]', 'utf-8');
-      return [];
+    const res = await fetch(`${KV_URL}/get/${key}`, {
+      headers: { Authorization: `Bearer ${KV_TOKEN}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || data.result === null || data.result === undefined) return null;
+    if (typeof data.result === 'string') {
+      try {
+        return JSON.parse(data.result);
+      } catch {
+        return null;
+      }
     }
-    console.error('Error reading invites db:', err);
-    return [];
+    if (Array.isArray(data.result)) {
+      return data.result;
+    }
+    return null;
+  } catch (err) {
+    console.error('[Storage KV] Read error:', err);
+    return null;
   }
 }
 
+async function kvSet(key: string, value: WeddingInvite[]): Promise<boolean> {
+  if (!KV_URL || !KV_TOKEN) return false;
+  try {
+    const valStr = JSON.stringify(value);
+    const res = await fetch(`${KV_URL}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${KV_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(['SET', key, valStr]),
+      cache: 'no-store',
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('[Storage KV] Write error:', err);
+    return false;
+  }
+}
+
+// Low-level Local Disk Read
+async function readFromDisk(): Promise<WeddingInvite[]> {
+  // 1. Try reading from TMP_DB_PATH if it exists
+  try {
+    if (fsSync.existsSync(TMP_DB_PATH)) {
+      const data = await fs.readFile(TMP_DB_PATH, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2. Try reading bundled data/invites.json
+  try {
+    if (fsSync.existsSync(BUNDLED_DB_PATH)) {
+      const data = await fs.readFile(BUNDLED_DB_PATH, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err: unknown) {
+    console.warn('[Storage] Could not read bundled invites.json:', err);
+  }
+
+  return [];
+}
+
+// Low-level Local Disk Write (Safe for Read-Only Vercel)
+async function writeToDisk(invites: WeddingInvite[]): Promise<void> {
+  const json = JSON.stringify(invites, null, 2);
+
+  // 1. Always write to /tmp on Vercel or local
+  try {
+    await fs.writeFile(TMP_DB_PATH, json, 'utf-8');
+  } catch (e) {
+    console.warn('[Storage] Could not write to tmp:', e);
+  }
+
+  // 2. Try writing to BUNDLED_DB_PATH if not running in read-only environment
+  if (!process.env.VERCEL) {
+    try {
+      await fs.mkdir(path.dirname(BUNDLED_DB_PATH), { recursive: true });
+      await fs.writeFile(BUNDLED_DB_PATH, json, 'utf-8');
+    } catch {
+      // Catch EROFS silently on read-only environments
+    }
+  }
+}
+
+// Core Read Function
+async function readInvites(): Promise<WeddingInvite[]> {
+  // 1. If KV is configured, prioritize KV cloud database
+  if (KV_URL && KV_TOKEN) {
+    const cloudData = await kvGet(KV_KEY);
+    if (Array.isArray(cloudData) && cloudData.length > 0) {
+      globalThis.__eternalvows_cache = cloudData;
+      return cloudData;
+    }
+
+    // First-time seed into KV from bundled file
+    const diskSeed = await readFromDisk();
+    if (diskSeed.length > 0) {
+      await kvSet(KV_KEY, diskSeed);
+      globalThis.__eternalvows_cache = diskSeed;
+      return diskSeed;
+    }
+  }
+
+  // 2. Check in-memory cache
+  if (globalThis.__eternalvows_cache && globalThis.__eternalvows_cache.length > 0) {
+    return globalThis.__eternalvows_cache;
+  }
+
+  // 3. Fallback to Disk (TMP or Bundled)
+  const diskData = await readFromDisk();
+  globalThis.__eternalvows_cache = diskData;
+  return diskData;
+}
+
+// Core Write Function
 async function writeInvites(invites: WeddingInvite[]): Promise<void> {
-  await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
-  await fs.writeFile(DB_PATH, JSON.stringify(invites, null, 2), 'utf-8');
+  globalThis.__eternalvows_cache = invites;
+
+  // 1. If KV is configured, sync to Cloud DB
+  if (KV_URL && KV_TOKEN) {
+    await kvSet(KV_KEY, invites);
+  }
+
+  // 2. Write to disk / tmp
+  await writeToDisk(invites);
+}
+
+// Webhook notification helper
+async function notifyOwner(
+  event: 'new_invite' | 'new_rsvp' | 'new_blessing',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any
+): Promise<void> {
+  const webhookUrl = process.env.NOTIFICATION_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  try {
+    let summary = '';
+    if (event === 'new_invite') {
+      summary = `💍 New Wedding Invite Request: ${data.couple?.groomName} & ${data.couple?.brideName} (${data.themeId})`;
+    } else if (event === 'new_rsvp') {
+      summary = `💌 New RSVP: ${data.guestName} (${data.guestCount} guests - ${data.attending ? 'Attending' : 'Not Attending'})`;
+    } else if (event === 'new_blessing') {
+      summary = `💐 New Blessing from ${data.author}: "${data.message}"`;
+    }
+
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: summary,
+        text: summary,
+        event,
+        payload: data,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+  } catch (err) {
+    console.warn('[Webhook] Could not deliver notification:', err);
+  }
 }
 
 export async function getAllInvites(): Promise<WeddingInvite[]> {
@@ -67,6 +243,7 @@ export async function createInvite(
 
   invites.unshift(newInvite);
   await writeInvites(invites);
+  await notifyOwner('new_invite', newInvite);
   return newInvite;
 }
 
@@ -115,6 +292,7 @@ export async function addRsvp(
   invites[index].rsvp.submissions.push(newRsvp);
   invites[index].updatedAt = new Date().toISOString();
   await writeInvites(invites);
+  await notifyOwner('new_rsvp', newRsvp);
   return newRsvp;
 }
 
@@ -147,6 +325,7 @@ export async function addBlessing(
   invites[index].blessingsWall.messages.unshift(newBlessing);
   invites[index].updatedAt = new Date().toISOString();
   await writeInvites(invites);
+  await notifyOwner('new_blessing', newBlessing);
   return newBlessing;
 }
 

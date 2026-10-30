@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getAllInvites, createInvite } from '@/lib/storage';
+import { getAllInvites, createInvite, getStorageEngine } from '@/lib/storage';
 
 export async function GET() {
   try {
     const invites = await getAllInvites();
-    return NextResponse.json({ success: true, invites });
+    const storageEngine = getStorageEngine();
+    return NextResponse.json({ success: true, invites, storageEngine });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

@@ -17,6 +17,8 @@ import {
   Search,
   Film,
   KeyRound,
+  MessageCircle,
+  Database,
 } from 'lucide-react';
 import { WeddingInvite } from '@/lib/types';
 import { getThemeById } from '@/config/themes';
@@ -33,6 +35,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'all'>('pending');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [storageEngine, setStorageEngine] = useState<'kv' | 'tmp' | 'local' | null>(null);
 
   const fetchInvites = useCallback(async () => {
     setLoading(true);
@@ -41,6 +44,9 @@ export default function AdminPage() {
       const data = await res.json();
       if (data.success) {
         setInvites(data.invites);
+        if (data.storageEngine) {
+          setStorageEngine(data.storageEngine);
+        }
       }
     } catch {
       // Error
@@ -225,6 +231,14 @@ export default function AdminPage() {
 
           <div className="flex items-center gap-3">
             <button
+              onClick={fetchInvites}
+              className="p-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 transition-all flex items-center gap-1.5"
+              title="Refresh data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-400' : ''}`} />
+            </button>
+
+            <button
               onClick={handleSeed70}
               className="px-3.5 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all flex items-center gap-1.5"
             >
@@ -244,6 +258,40 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Storage Engine Status Banner */}
+        <div
+          className={`p-4 rounded-2xl mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs border ${
+            storageEngine === 'kv'
+              ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+              : 'bg-amber-950/30 border-amber-500/40 text-amber-200'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Database
+              className={`w-4 h-4 shrink-0 ${
+                storageEngine === 'kv' ? 'text-emerald-400' : 'text-amber-400'
+              }`}
+            />
+            <div>
+              <span className="font-bold">
+                {storageEngine === 'kv'
+                  ? 'Cloud Database Connected (Vercel KV / Upstash Redis)'
+                  : 'Serverless File & Memory Storage Active'}
+              </span>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                {storageEngine === 'kv'
+                  ? 'All customer requests, approvals, and RSVPs are 100% permanently stored in the cloud.'
+                  : 'Requests are recorded in serverless memory and /tmp. For permanent 100% persistent storage, connect Vercel KV in your Vercel Dashboard.'}
+              </p>
+            </div>
+          </div>
+          {storageEngine !== 'kv' && (
+            <span className="px-2.5 py-1 rounded-lg bg-amber-400/20 text-amber-300 font-mono text-[10px] shrink-0 border border-amber-400/30">
+              Tip: Add KV_REST_API_URL in Vercel
+            </span>
+          )}
+        </div>
+
         {/* Metrics Row */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
           <div
@@ -454,6 +502,22 @@ export default function AdminPage() {
                       <Lock className="w-3.5 h-3.5 text-amber-400" />
                       <span>Preview (Restricted)</span>
                     </Link>
+
+                    {/* WhatsApp Couple Direct Lead Contact */}
+                    {inv.contactInfo?.phone && (
+                      <a
+                        href={`https://wa.me/${inv.contactInfo.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                          `Hi ${inv.couple.groomName} & ${inv.couple.brideName}! 💍 This is EternalVows Studio regarding your wedding invitation order (${theme?.name || inv.themeId}).`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#25D366] flex items-center gap-1.5 transition-colors"
+                        title="Chat with couple on WhatsApp"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 fill-[#25D366]" />
+                        <span>WhatsApp</span>
+                      </a>
+                    )}
 
                     {/* Admin Full Bypass Link */}
                     <Link
