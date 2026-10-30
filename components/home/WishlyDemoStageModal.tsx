@@ -13,6 +13,7 @@ import {
   Maximize2,
   Heart,
   Check,
+  MessageCircle,
 } from 'lucide-react';
 import { ThemeDefinition } from '@/lib/types';
 import { WEDDING_THEMES } from '@/config/themes';
@@ -158,6 +159,25 @@ export function WishlyDemoStageModal({
                 <Sparkles className="w-4 h-4 text-amber-600" />
                 <span>I want this one</span>
               </button>
+
+              {/* Direct WhatsApp Enquiry */}
+              {(() => {
+                const ownerPhone = process.env.NEXT_PUBLIC_OWNER_PHONE || '919876543210';
+                const waText = `Hi EternalVows Studio! 💌\n\nI love the "${currentTheme.name}" wedding invitation design on your website.\nCan you share details on pricing and customizing it?`;
+                const waUrl = `https://wa.me/${ownerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(waText)}`;
+                return (
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-[#25D366] hover:bg-[#20bd5a] px-5 py-2 text-sm font-semibold text-black shadow-xl transition-all transform hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                    title="Enquire on WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-black" />
+                    <span>Ask on WhatsApp</span>
+                  </a>
+                );
+              })()}
 
               {/* Viewport Mode Toggle */}
               <div className="flex items-center rounded-full bg-white/10 border border-white/15 p-0.5 text-xs text-zinc-300">

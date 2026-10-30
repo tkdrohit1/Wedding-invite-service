@@ -852,6 +852,20 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {/* Floating WhatsApp Concierge Button */}
+      <a
+        href={`https://wa.me/${(process.env.NEXT_PUBLIC_OWNER_PHONE || '919876543210').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+          'Hi EternalVows Studio! 💌 I am looking for a luxury wedding invitation. Can you help me choose and customize a design?'
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-black px-4 py-3 shadow-[0_10px_30px_rgba(37,211,102,0.4)] transition-all transform hover:scale-105 active:scale-95 font-semibold text-xs tracking-wide"
+        title="Chat with Wedding Concierge on WhatsApp"
+      >
+        <MessageCircle className="w-5 h-5 fill-black" />
+        <span className="font-bold hidden sm:inline">Chat on WhatsApp</span>
+      </a>
     </div>
   );
 }
